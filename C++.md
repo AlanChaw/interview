@@ -44,7 +44,7 @@
         > 说到 using，这里说一下using的几种用法。一是使用命名空间中的某个成员，二是使用整个命名空间，三是代替 typedef，四是在子类中使用基类的重载函数。
 
 * **三.类**
-    * 1）面向对象的三大特性（封装、继承、多态）
+    * 1）[面向对象的四大特征（封装、抽象、继承、多态）](面向对象的四大特性)
 
     * 2）[struct和class的区别？](https://blog.csdn.net/qq_37964547/article/details/81835488)
         > - struct 的成员默认是 public，class 成员默认是 private
@@ -124,6 +124,10 @@
 
         - [防止继承的方式](https://blog.twofei.com/672/)
             > final 就行了。。 别管那么多了。
+
+        - 构造和析构函数中调用虚函数.
+            > - 可以调用，但没有发生动态联编、即对虚函数的调用其实是实调用，也就是基类的版本。
+
     * 9）[删除的合成函数](https://github.com/arkingc/llc/blob/master/cpp/class/delete/README.md)（一般函数而言不想调用的话不定义就好）
         > 主要参见前边拷贝构造函数和移动构造函数那部分。
 
@@ -215,10 +219,22 @@
         > - 栈内存由编译器自动分配，不存在碎片问题。堆内存由程序员手动分配，存在内存碎片问题。
         > - 堆内存一般比栈内存大很多。但栈内存分配效率较高。
 
-    * 2）[new](https://github.com/arkingc/note/blob/master/C++/C++%E5%AF%B9%E8%B1%A1%E6%A8%A1%E5%9E%8B.md#1new)和malloc的区别？（函数，运算符、类型安全、计算空间、步骤，[operator new的实现](../C++/C++对象模型.md#3operator-new和operator-delete的实现)）
+    * 2）[new](https://github.com/arkingc/note/blob/master/C++/C++%E5%AF%B9%E8%B1%A1%E6%A8%A1%E5%9E%8B.md#1new)和malloc的区别？（函数，运算符、类型安全、计算空间、步骤）
         > - 一个C一个C++。对于类类型，要使用new分配内存，new分配内存后会自动调用对象的构造函数。
-        > - new是运算符而malloc是函数。malloc返回类型是 (void*)，需要手动转换，new不需要(内置类型转换和类型安全检查功能)。
+        > - new是关键字而malloc是函数。malloc返回类型是 (void*)，需要手动转换，new不需要(内置类型转换和类型安全检查功能)。
         > - new会自动计算空间(内置了sizeof)，malloc需要用 sizeof 计算。
+
+    * 3）[operator-new和operator-delete的实现](https://blog.csdn.net/hazir/article/details/21413833)
+        ```cpp
+        void *operator new(size_t);     //allocate an object
+        void *operator delete(void *);    //free an object
+
+        void *operator new[](size_t);     //allocate an array
+        void *operator delete[](void *);    //free an array
+        ```
+        > - 它们是 C++ 标准库函数。这两个函数和 C 语言中的 malloc 和 free 函数有点像了，都是用来申请和释放内存的，并且 operator new 申请内存之后不对内存进行初始化，直接返回申请内存的指针。 所以在 new 时，会调用 operator new，delet 时会调用 operator delete，来分配和释放内存。STL提供三个重载版本，一个抛出异常(bad_alloc)，一个不抛出异常，一个用来做 placement new，在传入指针的地址上构建对象。
+
+        > - 也就是说，new operator 是关键字。但是 operator new 是一个可以重载的操作符。在调用 new operator 时，分配内存这一步是由 operator new(sizeof A) 完成的，如果有重载版本则会执行重载版本。
 
     * 3）[new[]与delete[]？](../C++/C++对象模型.md#4针对数组的new语意)（步骤：如何分配内存，构建对象、如何析构与释放内存？[构造与析构](../C++/C++对象模型.md#3对象数组)）
         > - 用于分配和删除内置数组对象。需要成对出现。
@@ -443,3 +459,12 @@
         > 编译器会自动生成一个 unique_name，并自动using此命名空间。名称的作用域被限制在当前文件中，无法通过在另外的文件中使用extern声明来进行链接。
     * 17）std::bind()
         > 用于生成一个可调用对象，并且绑定一部分参数。当绑定成员函数时，传入的第一个参数必须是this指针。未绑定的参数用 std::placeholder 占位符代替。
+
+    * 18）一个C++源文件从文本到可执行文件经历的过程
+        > - 预处理，产生.ii文件
+        > - 编译，产生汇编文件(.s文件)
+        > - 汇编，产生目标文件(.o或.obj文件)
+        > - 链接,产生可执行文件(.out或.exe文件)
+
+    * 19）无锁数据结构
+        > 无锁机制的实现是基于CPU提供的一种原子操作CAS（Compare and Swap），CAS是这样工作的，它会原子地将一块内存的值与一个给定的值进行比较，如果它们相等就用新值替换返回true，否则什么也不做直接返回false。
